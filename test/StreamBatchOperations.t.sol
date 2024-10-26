@@ -4,9 +4,6 @@ pragma solidity 0.8.24;
 import { GlobalHelper } from "./utils/GlobalHelper.sol";
 
 contract StreamBatchOperationsTest is GlobalHelper {
-    uint256 public amountToStream = 100e18;
-    uint256 public window = 1 minutes;
-
     function test_batchAllowStreamFailsIfInputArrayLengthsDoNotMatch() public {
         address[] memory tokens = new address[](2);
         address[] memory recipients = new address[](2);
@@ -289,35 +286,5 @@ contract StreamBatchOperationsTest is GlobalHelper {
 
         assertEq(expectedHash1, streamHashes[0]);
         assertEq(expectedHash2, streamHashes[1]);
-    }
-
-    function _batchCreateStreams() internal {
-        address[] memory tokens = new address[](2);
-        address[] memory recipients = new address[](2);
-        uint256[] memory amounts = new uint256[](2);
-        uint256[] memory windows = new uint256[](2);
-        bool[] memory onces = new bool[](2);
-
-        tokens[0] = address(token);
-        tokens[1] = address(token);
-        recipients[0] = recipient;
-        recipients[1] = owner;
-        amounts[0] = amountToStream;
-        amounts[1] = amountToStream;
-        windows[0] = window;
-        windows[1] = window;
-        onces[0] = true;
-        onces[1] = true;
-
-        vm.startPrank(streamer);
-        stream.batchAllowStream(tokens, recipients, amounts, windows, onces);
-        vm.stopPrank();
-    }
-
-    function _mintTokensToStreamerAndProvideAllowanceToStream(uint256 _amount) internal {
-        vm.startPrank(streamer);
-        token.mint(streamer, _amount);
-        token.approve(address(stream), _amount);
-        vm.stopPrank();
     }
 }

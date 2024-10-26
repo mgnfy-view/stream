@@ -4,9 +4,6 @@ pragma solidity 0.8.24;
 import { GlobalHelper } from "./utils/GlobalHelper.sol";
 
 contract StreamTest is GlobalHelper {
-    uint256 public amountToStream = 100e18;
-    uint256 public window = 1 minutes;
-
     function test_computeHash() public view {
         bytes32 expectedHash = keccak256(abi.encodePacked(streamer, address(token), recipient));
 
@@ -316,20 +313,5 @@ contract StreamTest is GlobalHelper {
         vm.expectEmit(true, true, true, true);
         emit StreamAllowed(streamer, address(token), recipient, 0);
         stream.cancelStreams(tokens, streamers, recipients);
-    }
-
-    function _createStream(bool _streamOnce) internal returns (bytes32 streamHash) {
-        vm.startPrank(streamer);
-        stream.allowStream(address(token), recipient, amountToStream, window, _streamOnce);
-        vm.stopPrank();
-
-        streamHash = stream.computeHash(streamer, address(token), recipient);
-    }
-
-    function _mintTokensToStreamerAndProvideAllowanceToStream(uint256 _amount) internal {
-        vm.startPrank(streamer);
-        token.mint(streamer, _amount);
-        token.approve(address(stream), _amount);
-        vm.stopPrank();
     }
 }

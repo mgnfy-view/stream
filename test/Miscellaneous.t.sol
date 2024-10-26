@@ -6,9 +6,6 @@ import { GlobalHelper } from "./utils/GlobalHelper.sol";
 import { Stream } from "../src/Stream.sol";
 
 contract MiscellaneousTest is GlobalHelper {
-    uint256 public amountToStream = 100e18;
-    uint256 public window = 1 minutes;
-
     function test_getAvailableFailsIfStreamDoesNotExist() public {
         vm.expectRevert(bytes(STREAM_DOES_NOT_EXIST));
         stream.getAvailable(address(token), streamer, recipient);
@@ -101,20 +98,5 @@ contract MiscellaneousTest is GlobalHelper {
         (bytes32[] memory recipientHashes) = stream.viewRecipientAllowances(recipient);
 
         assertEq(recipientHashes[0], streamHash);
-    }
-
-    function _createStream(bool _streamOnce) internal returns (bytes32 streamHash) {
-        vm.startPrank(streamer);
-        stream.allowStream(address(token), recipient, amountToStream, window, _streamOnce);
-        vm.stopPrank();
-
-        streamHash = stream.computeHash(streamer, address(token), recipient);
-    }
-
-    function _mintTokensToStreamerAndProvideAllowanceToStream(uint256 _amount) internal {
-        vm.startPrank(streamer);
-        token.mint(streamer, _amount);
-        token.approve(address(stream), _amount);
-        vm.stopPrank();
     }
 }
