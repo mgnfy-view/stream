@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import { GlobalHelper } from "./utils/GlobalHelper.sol";
 
-contract StreamInitializationTest is GlobalHelper {
+contract StreamTest is GlobalHelper {
     uint256 public amountToStream = 100e18;
     uint256 public window = 1 minutes;
 
