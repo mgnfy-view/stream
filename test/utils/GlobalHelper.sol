@@ -4,9 +4,10 @@ pragma solidity 0.8.24;
 import { Test } from "forge-std/Test.sol";
 
 import { Stream } from "../../src/Stream.sol";
+import { EventsAndErrors } from "./EventsAndErrors.sol";
 import { MockERC20 } from "./MockERC20.sol";
 
-contract GlobalHelper is Test {
+contract GlobalHelper is Test, EventsAndErrors {
     address public owner;
     Stream public stream;
 
