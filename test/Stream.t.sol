@@ -210,6 +210,28 @@ contract StreamTest is GlobalHelper {
         assertEq(timestamp, block.timestamp);
     }
 
+    function test_collectFundsFromStreamWithFees() public {
+        uint256 newFee = 10;
+        uint256 feeAmount = (amountToStream * newFee) / 1000;
+
+        vm.startPrank(owner);
+        stream.setFee(newFee, address(0));
+        vm.stopPrank();
+
+        bool streamOnce = true;
+
+        _createStream(streamOnce);
+        _mintTokensToStreamerAndProvideAllowanceToStream(amountToStream + feeAmount);
+
+        vm.warp(block.timestamp + window);
+
+        stream.stream(address(token), streamer, recipient);
+
+        assertEq(token.balanceOf(streamer), 0);
+        assertEq(token.balanceOf(recipient), amountToStream);
+        assertEq(token.balanceOf(owner), feeAmount);
+    }
+
     function test_collectingFundsFromStreamEmitsEvent() public {
         bool streamOnce = false;
 
@@ -221,6 +243,79 @@ contract StreamTest is GlobalHelper {
         vm.expectEmit(true, true, true, true);
         emit Streamed(address(token), streamer, recipient, amountToStream);
         stream.stream(address(token), streamer, recipient);
+    }
+
+    function test_cancelStreamFailsIfInputArraysDoNotMatch() public {
+        address[] memory tokens = new address[](2);
+        address[] memory streamers = new address[](1);
+        address[] memory recipients = new address[](2);
+
+        vm.startPrank(streamer);
+        vm.expectRevert(bytes(INPUT_ARRAYS_LENGTH_MISMATCH));
+        stream.cancelStreams(tokens, streamers, recipients);
+    }
+
+    function test_cancelStreamFailsIfCallerIsNotStreamerOrRecipient() public {
+        address[] memory tokens = new address[](2);
+        address[] memory streamers = new address[](2);
+        address[] memory recipients = new address[](2);
+
+        vm.startPrank(owner);
+        vm.expectRevert(bytes(YOU_ARE_NOT_THE_STREAMER_OR_RECIPIENT));
+        stream.cancelStreams(tokens, streamers, recipients);
+    }
+
+    function test_cancelStreamFailsIfStreamDoesNotExist() public {
+        address[] memory tokens = new address[](1);
+        address[] memory streamers = new address[](1);
+        address[] memory recipients = new address[](1);
+
+        tokens[0] = address(token);
+        streamers[0] = streamer;
+        recipients[0] = recipient;
+
+        vm.startPrank(streamer);
+        vm.expectRevert(bytes(STREAM_DOES_NOT_EXIST));
+        stream.cancelStreams(tokens, streamers, recipients);
+    }
+
+    function test_cancelStream() public {
+        bool streamOnce = true;
+        bytes32 streamHash = _createStream(streamOnce);
+
+        address[] memory tokens = new address[](1);
+        address[] memory streamers = new address[](1);
+        address[] memory recipients = new address[](1);
+
+        tokens[0] = address(token);
+        streamers[0] = streamer;
+        recipients[0] = recipient;
+
+        vm.startPrank(streamer);
+        stream.cancelStreams(tokens, streamers, recipients);
+
+        (,,,, uint256 outstanding, uint256 allowable,,,) = stream.streamDetails(streamHash);
+
+        assertEq(outstanding, 0);
+        assertEq(allowable, 0);
+    }
+
+    function test_cancelStreamEmitsEvent() public {
+        bool streamOnce = true;
+        _createStream(streamOnce);
+
+        address[] memory tokens = new address[](1);
+        address[] memory streamers = new address[](1);
+        address[] memory recipients = new address[](1);
+
+        tokens[0] = address(token);
+        streamers[0] = streamer;
+        recipients[0] = recipient;
+
+        vm.startPrank(streamer);
+        vm.expectEmit(true, true, true, true);
+        emit StreamAllowed(streamer, address(token), recipient, 0);
+        stream.cancelStreams(tokens, streamers, recipients);
     }
 
     function _createStream(bool _streamOnce) internal returns (bytes32 streamHash) {
