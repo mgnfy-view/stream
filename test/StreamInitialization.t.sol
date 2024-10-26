@@ -52,7 +52,7 @@ contract StreamInitializationTest is GlobalHelper {
         assertEq(stream.feeAddress(), owner);
     }
 
-    function test_adminChangedWhenNonZeroAddressPassedToSetFee() public {
+    function test_adminChangesWhenNonZeroAddressPassedToSetFee() public {
         address newFeeAddress = makeAddr("newFeeAddress");
 
         vm.startPrank(owner);
